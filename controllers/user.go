@@ -138,9 +138,6 @@ func (uc UserController) UpdateUser(w http.ResponseWriter, r *http.Request, p ht
   fmt.Fprintf(w, "%s", uj)
 }
 
-
-
-
 // RemoveUser removes an existing user resource
 func (uc UserController) RemoveUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
   // Grab id
