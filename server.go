@@ -25,6 +25,9 @@ func main() {
   // Create a new user
   r.POST("/user", uc.CreateUser)
 
+  //  Update a user
+  r.PUT("/user/:id",uc.UpdateUser)
+
   // Remove an existing user
   r.DELETE("/user/:id", uc.RemoveUser)
 

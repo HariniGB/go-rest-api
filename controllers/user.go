@@ -49,7 +49,7 @@ func (uc UserController) GetUser(w http.ResponseWriter, r *http.Request, p httpr
   // Marshal provided interface into JSON structure
   uj, _ := json.Marshal(u)
 
-  // Write content-type, statuscode, payload
+  // Write content-type, status code, payload
   w.Header().Set("Content-Type", "application/json")
   w.WriteHeader(200)
   fmt.Fprintf(w, "%s", uj)
@@ -72,11 +72,50 @@ func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p ht
   // Marshal provided interface into JSON structure
   uj, _ := json.Marshal(u)
 
-  // Write content-type, statuscode, payload
+  // Write content-type, status code, payload
   w.Header().Set("Content-Type", "application/json")
   w.WriteHeader(201)
   fmt.Fprintf(w, "%s", uj)
 }
+
+
+// UpdateUser updates the user resource
+func (uc UserController) UpdateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+  // Grab id
+  id := p.ByName("id")
+
+  // Verify id is ObjectId, otherwise bail
+  if !bson.IsObjectIdHex(id) {
+    w.WriteHeader(404)
+    return
+  }
+
+  // Grab id
+  oid := bson.ObjectIdHex(id)
+
+  // Stub user
+  u := models.User{}
+
+  // Fetch user
+  if err := uc.session.DB("go_rest").C("users").FindId(oid).One(&u); err != nil {
+    w.WriteHeader(404)
+    return
+  }
+
+  //Update the user to mongo
+  uc.session.DB("go_rest").C("users").FindId(oid).Update(u)
+
+  // Marshal provided interface into JSON structure
+  uj, _ := json.Marshal(u)
+
+  // Write content-type, status code, payload
+  w.Header().Set("Content-Type", "application/json")
+  w.WriteHeader(201)
+  fmt.Fprintf(w, "%s", uj)
+}
+
+
+
 
 // RemoveUser removes an existing user resource
 func (uc UserController) RemoveUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
