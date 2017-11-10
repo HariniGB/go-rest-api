@@ -1,5 +1,7 @@
 package main
 
+// IMPORTANT LINK FOR REFERENCE:  https://stevenwhite.com/tag/golang/
+
 import (
   // Standard library packages
   "net/http"
