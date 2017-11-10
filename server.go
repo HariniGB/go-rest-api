@@ -19,6 +19,9 @@ func main() {
   // Get a UserController instance
   uc := controllers.NewUserController(getSession())
 
+  // Get all users resources
+  r.GET("/users", uc.GetUsers)
+
   // Get a user resource
   r.GET("/user/:id", uc.GetUser)
 
@@ -26,7 +29,7 @@ func main() {
   r.POST("/user", uc.CreateUser)
 
   //  Update a user
-  r.PUT("/user/:id",uc.UpdateUser)
+  r.PUT("/user/:id", uc.UpdateUser)
 
   // Remove an existing user
   r.DELETE("/user/:id", uc.RemoveUser)

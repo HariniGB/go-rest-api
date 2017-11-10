@@ -24,6 +24,28 @@ func NewUserController(s *mgo.Session) *UserController {
 }
 
 // GetUser retrieves an individual user resource
+func (uc UserController) GetUsers(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+
+  // Stub user
+  u := models.User{}
+
+  // Fetch user
+  if err := uc.session.DB("go_rest").C("users").All(&u); err != nil {
+    w.WriteHeader(404)
+    return
+  }
+
+  // Marshal provided interface into JSON structure
+  uj, _ := json.Marshal(u)
+
+  // Write content-type, status code, payload
+  w.Header().Set("Content-Type", "application/json")
+  w.WriteHeader(200)
+  fmt.Fprintf(w, "%s", uj)
+}
+
+
+// GetUsers retrieves all the users resources
 func (uc UserController) GetUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
   // Grab id
   id := p.ByName("id")
@@ -54,6 +76,7 @@ func (uc UserController) GetUser(w http.ResponseWriter, r *http.Request, p httpr
   w.WriteHeader(200)
   fmt.Fprintf(w, "%s", uj)
 }
+
 
 // CreateUser creates a new user resource
 func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -97,13 +120,14 @@ func (uc UserController) UpdateUser(w http.ResponseWriter, r *http.Request, p ht
   u := models.User{}
 
   // Fetch user
-  if err := uc.session.DB("go_rest").C("users").FindId(oid).One(&u); err != nil {
+  if err := uc.session.DB("go_rest").C("users").FindId(oid).One(&u);; err != nil {
     w.WriteHeader(404)
     return
   }
 
   //Update the user to mongo
-  uc.session.DB("go_rest").C("users").FindId(oid).Update(u)
+  uc.session.DB("go_rest").C("users").UpsertId(oid)
+  u := models.User{}
 
   // Marshal provided interface into JSON structure
   uj, _ := json.Marshal(u)
