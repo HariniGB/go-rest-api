@@ -120,7 +120,7 @@ func (uc UserController) UpdateUser(w http.ResponseWriter, r *http.Request, p ht
   u := models.User{}
 
   // Fetch user
-  if err := uc.session.DB("go_rest").C("users").FindId(oid).One(&u);; err != nil {
+  if err := uc.session.DB("go_rest").C("users").FindId(oid).One(&u); err != nil {
     w.WriteHeader(404)
     return
   }
