@@ -30,7 +30,7 @@ func (uc UserController) GetUsers(w http.ResponseWriter, r *http.Request, p http
   u := models.User{}
 
   // Fetch user
-  if err := uc.session.DB("go_rest").C("users").All(&u); err != nil {
+  if err := uc.session.DB("go_rest").C("users"); err != nil {
     w.WriteHeader(404)
     return
   }
