@@ -128,14 +128,11 @@ func (uc UserController) UpdateUser(w http.ResponseWriter, r *http.Request, p ht
   // Populate the user data
   json.NewDecoder(r.Body).Decode(&u)
 
-  // Stub
-  nu := models.User{}
-
   //Update the user to mongo
-  uc.session.DB("go_rest").C("users").Update(u, nu)
+  uc.session.DB("go_rest").C("users").Update(oid, u)
 
   // Marshal provided interface into JSON structure
-  uj, _ := json.Marshal(nu)
+  uj, _ := json.Marshal(u)
 
   // Write content-type, status code, payload
   w.Header().Set("Content-Type", "application/json")
