@@ -55,6 +55,7 @@ func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p ht
   // Stub an user to be populated from the body
   u := models.User{}
 
+  fmt.Printf("\nrequest:",r.Body)
   // Populate the user data
   json.NewDecoder(r.Body).Decode(&u)
 
@@ -63,7 +64,7 @@ func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p ht
 
   // Write the user to mongo
   uc.session.DB("go_rest").C("users").Insert(u)
-
+  fmt.Printf("\ncreated",u)
   // Marshal provided interface into JSON structure
   uj, _ := json.Marshal(u)
 
