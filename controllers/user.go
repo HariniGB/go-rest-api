@@ -53,17 +53,17 @@ func (uc UserController) Login(w http.ResponseWriter, r *http.Request, p httprou
 // CreateUser creates a new user resource
 func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
   // Stub an user to be populated from the body
-  name := r.FormValue("name")
-  email := r.FormValue("email")
-  password :=r.FormValue("password")
-  u := models.User{name, email, password}
-
+  u := models.User{}
+  r.ParseForm()
 
   // Populate the user data
   json.NewDecoder(r.Body).Decode(&u)
 
   // Add an Id
   u.Id = bson.NewObjectId()
+  u.Name = r.FormValue("name")
+  u.Email = r.FormValue("email")
+  u.Password = r.FormValue("password")
 
   // Write the user to mongo
   uc.session.DB("go_rest").C("users").Insert(u)
