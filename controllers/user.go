@@ -9,6 +9,7 @@ import (
   "gopkg.in/mgo.v2"
   "gopkg.in/mgo.v2/bson"
   "html/template"
+  "golang.org/x/crypto/bcrypt"
 )
 
 type (
@@ -21,6 +22,17 @@ type (
 // NewUserController provides a reference to a UserController with provided mongo session
 func NewUserController(s *mgo.Session) *UserController {
   return &UserController{s}
+}
+
+//Method to get hash password for user password and show how to hash passwords using bcrypt
+func HashPassword(password string) (string, error) {
+  bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+  return string(bytes), err
+}
+//  Method to check the hashed password and user given password while login
+func CheckPasswordHash(password, hash string) bool {
+  err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+  return err == nil
 }
 
 // Home retrieves the home page
@@ -63,7 +75,14 @@ func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p ht
   u.Id = bson.NewObjectId()
   u.Name = r.FormValue("name")
   u.Email = r.FormValue("email")
-  u.Password = r.FormValue("password")
+  password, _:= HashPassword(r.FormValue("password"))
+  u.Password = password
+
+  // Testing Bcrypt
+  fmt.Println("Password:", r.FormValue("password"))
+  fmt.Println("Hash:    ", u.Password)
+  match := CheckPasswordHash(r.FormValue("password"), u.Password)
+  fmt.Println("Match:   ", match)
 
   // Write the user to mongo
   uc.session.DB("go_rest").C("users").Insert(u)
@@ -75,6 +94,7 @@ func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p ht
   w.Header().Set("Content-Type", "application/json")
   w.WriteHeader(201)
   fmt.Fprintf(w, "%s", uj)
+
 }
 
 // GetUsers retrieves all the user's resources
