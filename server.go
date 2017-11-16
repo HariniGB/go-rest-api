@@ -47,7 +47,7 @@ func main() {
   r.DELETE("/user/:id", uc.RemoveUser)
 
   // Fire up the server
-  http.ListenAndServe("localhost:3000/api", r)
+  http.ListenAndServe("localhost:3000", r)
 }
 
 // getSession creates a new mongo session and panics if connection error occurs
