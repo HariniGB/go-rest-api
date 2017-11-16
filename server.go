@@ -5,10 +5,10 @@ package main
 import (
   // Standard library packages
   "net/http"
-
+  // Connecting to the controller in same folder
+  "github.com/HariniGB/go-rest-api/controllers"
   // Third party packages
   "github.com/julienschmidt/httprouter"
-  "github.com/HariniGB/go-rest-api/controllers"
   "gopkg.in/mgo.v2"
 )
 
@@ -20,7 +20,19 @@ func main() {
   uc := controllers.NewUserController(getSession())
 
   // Get all users resources
-  r.GET("/users", uc.GetUsers)
+  // r.GET("/users", uc.GetUsers)
+
+  // Home page
+   r.GET("/", uc.Home)
+
+  // sign up page
+  r.GET("/signup", uc.Signup)
+
+  // Login page
+  r.GET("/login", uc.Login)
+
+  // Logout session
+  // r.DELETE("/logout", Logout())
 
   // Get a user resource
   r.GET("/user/:id", uc.GetUser)
@@ -35,7 +47,7 @@ func main() {
   r.DELETE("/user/:id", uc.RemoveUser)
 
   // Fire up the server
-  http.ListenAndServe("localhost:3000", r)
+  http.ListenAndServe("localhost:3000/api", r)
 }
 
 // getSession creates a new mongo session and panics if connection error occurs
@@ -51,3 +63,5 @@ func getSession() *mgo.Session {
   // Deliver session
   return s
 }
+
+
