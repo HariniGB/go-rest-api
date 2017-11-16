@@ -53,9 +53,9 @@ func (uc UserController) Login(w http.ResponseWriter, r *http.Request, p httprou
 // CreateUser creates a new user resource
 func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
   // Stub an user to be populated from the body
-  u := models.User{}
 
-  fmt.Printf("\nrequest:",r.Body)
+  fmt.Printf("\nrequest:",r.PostFormValue("name"))
+  u := models.User{}
   // Populate the user data
   json.NewDecoder(r.Body).Decode(&u)
 
