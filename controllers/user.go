@@ -37,7 +37,7 @@ func CheckPasswordHash(password, hash string) bool {
 
 // Home retrieves the home page
 func (uc UserController) Home(w http.ResponseWriter, r *http.Request, p httprouter.Params){
-  tmpl, err := template.ParseFiles("home.html")
+  tmpl, err := template.ParseFiles("templates/home.html")
   if err != nil {
     panic(err)
   }
@@ -46,7 +46,7 @@ func (uc UserController) Home(w http.ResponseWriter, r *http.Request, p httprout
 
 // Sign up retrieves the signup form for new users
 func (uc UserController) Signup(w http.ResponseWriter, r *http.Request, p httprouter.Params){
-  tmpl, err := template.ParseFiles("signup.html")
+  tmpl, err := template.ParseFiles("templates/signup.html")
   if err != nil {
     panic(err)
   }
@@ -55,7 +55,7 @@ func (uc UserController) Signup(w http.ResponseWriter, r *http.Request, p httpro
 
 // Login retrieves the login form for the users
 func (uc UserController) Login(w http.ResponseWriter, r *http.Request, p httprouter.Params){
-  tmpl, err := template.ParseFiles("login.html")
+  tmpl, err := template.ParseFiles("templates/login.html")
   if err != nil {
     panic(err)
   }
