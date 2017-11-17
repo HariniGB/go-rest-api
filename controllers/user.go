@@ -85,7 +85,7 @@ func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p ht
   // fmt.Println("Match:   ", match)
 
   // Write the user to mongo
-  uc.session.DB("go_rest").C("users").Insert(u)
+  uc.session.DB("cmpe272").C("users").Insert(u)
   fmt.Printf("\ncreated",u)
   // Marshal provided interface into JSON structure
   uj, _ := json.Marshal(u)
@@ -115,7 +115,7 @@ func (uc UserController) GetUser(w http.ResponseWriter, r *http.Request, p httpr
   u := models.User{}
 
   // Fetch user
-  if err := uc.session.DB("go_rest").C("users").FindId(oid).One(&u); err != nil {
+  if err := uc.session.DB("cmpe272").C("users").FindId(oid).One(&u); err != nil {
     w.WriteHeader(404)
     return
   }
@@ -147,7 +147,7 @@ func (uc UserController) UpdateUser(w http.ResponseWriter, r *http.Request, p ht
   u := models.User{}
 
   // Fetch user
-  if err := uc.session.DB("go_rest").C("users").FindId(oid).One(&u); err != nil {
+  if err := uc.session.DB("cmpe272").C("users").FindId(oid).One(&u); err != nil {
     w.WriteHeader(404)
     return
   }
@@ -156,7 +156,7 @@ func (uc UserController) UpdateUser(w http.ResponseWriter, r *http.Request, p ht
   json.NewDecoder(r.Body).Decode(&u)
 
   //Update the user to mongo
-  uc.session.DB("go_rest").C("users").Update(oid, u)
+  uc.session.DB("cmpe272").C("users").Update(oid, u)
 
   // Marshal provided interface into JSON structure
   uj, _ := json.Marshal(u)
@@ -182,7 +182,7 @@ func (uc UserController) RemoveUser(w http.ResponseWriter, r *http.Request, p ht
   oid := bson.ObjectIdHex(id)
 
   // Remove user
-  if err := uc.session.DB("go_rest").C("users").RemoveId(oid); err != nil {
+  if err := uc.session.DB("cmpe272").C("users").RemoveId(oid); err != nil {
     w.WriteHeader(404)
     return
   }
@@ -201,7 +201,7 @@ func (uc UserController) RemoveUser(w http.ResponseWriter, r *http.Request, p ht
 //   u := models.User{}
 
 //   // Fetch user
-//   if err := uc.session.DB("go_rest").C("users"); err != nil {
+//   if err := uc.session.DB("cmpe272").C("users"); err != nil {
 //     w.WriteHeader(404)
 //     return
 //   }
