@@ -16,7 +16,7 @@ $ mkdir golang
 $ export GOPATH=[full_path_to_dir]/golang
 ```
 
-###Recommended folder structure
+### Recommended folder structure
 **bin/** and **src/**<br>
 **bin/** will containe the compiled files<br>
 **src/** should have one package file per folder
@@ -52,6 +52,6 @@ Android support was added in version 1.4, which has since been ported to also ru
 
 
 ## Resources
-###[Go Doc](https://godoc.org/github.com/)
-###[Interactive tutorial](https://tour.golang.org/welcome/1)
-###[Repl.it like editor](http://play.golang.org/)
+### [Go Doc](https://godoc.org/github.com/)
+### [Interactive tutorial](https://tour.golang.org/welcome/1)
+### [Repl.it like editor](http://play.golang.org/)
