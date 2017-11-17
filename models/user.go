@@ -12,10 +12,11 @@ type (
   }
 )
 
-// type  (
-// sessionData struct {
-//   User
-//   LoggedIn  bool `json:"LoggedIn" bson:"LoggedIn"`
-//   LoginFail bool `json:"LoginFail" bson:"LoginFail"`
-// }
-// )
+type  (
+Url struct {
+  Id         bson.ObjectId `json:"id" bson:"_id"`
+  oURL       string        `json:"oURL" bson:"oURL"`
+  sURL       string        `json:"sURL" bson:"sURL"`
+  userId     string        `json:"userId" bson:"userId"`
+}
+)

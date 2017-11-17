@@ -123,17 +123,20 @@ func (uc UserController) GetUser(w http.ResponseWriter, r *http.Request, p httpr
   // Marshal provided interface into JSON structure
   uj, _ := json.Marshal(u)
 
+  var urls []Url
   // Get the URLs created by this user and use marshals for JSON structure
-  err := uc.session.DB("cmpe272").C("UrlMap").Find(bson.M{"userId": oid})
-  if err != nil {
-   fmt.Fprintf(w, "%s", "Find Fail")
+  if err := uc.session.DB("cmpe272").C("UrlMap").Find(bson.M{"userId": id}).All(&urls); err != nil {
+    w.WriteHeader(404)
+    return
   }
+
+  url_list, _ := json.Marshal(urls)
 
   // Write content-type, status code, payload
   w.Header().Set("Content-Type", "application/json")
   w.WriteHeader(200)
   fmt.Fprintf(w, "%s", uj)
-  fmt.Fprintf(w, "%s", urls)
+  fmt.Fprintf(w, "%s", url_list)
 }
 
 // UpdateUser updates the user resource
