@@ -13,10 +13,10 @@ type (
 )
 
 type  (
-Url struct {
+  Url struct {
   Id         bson.ObjectId `json:"id" bson:"_id"`
   oURL       string        `json:"oURL" bson:"oURL"`
   sURL       string        `json:"sURL" bson:"sURL"`
   userId     string        `json:"userId" bson:"userId"`
-}
+  }
 )
