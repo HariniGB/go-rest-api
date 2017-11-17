@@ -33,16 +33,16 @@ func main() {
   r.GET("/login", uc.Login)
 
   // Get a user resource
-  r.GET("/user/:id", uc.GetUser)
+  r.GET("/api/v1/user/:id", uc.GetUser)
 
   // Create a new user
-  r.POST("/user", uc.CreateUser)
+  r.POST("/api/v1/user", uc.CreateUser)
 
   //  Update a user
-  r.PUT("/user/:id", uc.UpdateUser)
+  r.PUT("/api/v1/user/:id", uc.UpdateUser)
 
   // Remove an existing user
-  r.DELETE("/user/:id", uc.RemoveUser)
+  r.DELETE("/api/v1/user/:id", uc.RemoveUser)
 
   // Fire up the server
   http.ListenAndServe("localhost:3000", r)
