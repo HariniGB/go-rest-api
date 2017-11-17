@@ -34,7 +34,6 @@ To run the compiled file:
 $ bin/folder_path
 ```
 or
-
 ```bash
 $ go run (file-name).go
 ```
@@ -49,7 +48,15 @@ Android support was added in version 1.4, which has since been ported to also ru
 #### [Install Mongo in Mac details](https://treehouse.github.io/installation-guides/mac/mongo-mac.html)
 2. mongo db path/bin/mongod to start mongodb server
 3. mongo db path/bin/mongo to start mongodb shell
-
+4. To view the data inside database collections 
+```bash
+$ mongo show
+$ show dbs
+$ use go_rest
+$ show colections
+$ db.users.find()
+```
+####  For futher reference: [Install Mongo in Mac details](https://docs.mongodb.com/manual/reference/mongo-shell/)
 
 ## Resources
 ### [Go Doc](https://godoc.org/github.com/)
