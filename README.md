@@ -56,7 +56,7 @@ $ use go_rest
 $ show colections
 $ db.users.find()
 ```
-####  For futher reference: [Install Mongo in Mac details](https://docs.mongodb.com/manual/reference/mongo-shell/)
+####  For futher reference: [Mongo shell manual](https://docs.mongodb.com/manual/reference/mongo-shell/)
 
 ## Resources
 ### [Go Doc](https://godoc.org/github.com/)
