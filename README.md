@@ -46,7 +46,7 @@ Android support was added in version 1.4, which has since been ported to also ru
 
 ## Dependencies:
 1. Install mongo db 
-#[Install Mongo in Mac details](https://treehouse.github.io/installation-guides/mac/mongo-mac.html)
+#### [Install Mongo in Mac details](https://treehouse.github.io/installation-guides/mac/mongo-mac.html)
 2. mongo db path/bin/mongod to start mongodb server
 3. mongo db path/bin/mongo to start mongodb shell
 
