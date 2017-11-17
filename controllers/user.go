@@ -79,10 +79,10 @@ func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p ht
   u.Password = password
 
   // Testing Bcrypt
-  fmt.Println("Password:", r.FormValue("password"))
-  fmt.Println("Hash:    ", u.Password)
-  match := CheckPasswordHash(r.FormValue("password"), u.Password)
-  fmt.Println("Match:   ", match)
+  // fmt.Println("Password:", r.FormValue("password"))
+  // fmt.Println("Hash:    ", u.Password)
+  // match := CheckPasswordHash(r.FormValue("password"), u.Password)
+  // fmt.Println("Match:   ", match)
 
   // Write the user to mongo
   uc.session.DB("go_rest").C("users").Insert(u)

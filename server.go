@@ -10,6 +10,7 @@ import (
   // Third party packages
   "github.com/julienschmidt/httprouter"
   "gopkg.in/mgo.v2"
+
 )
 
 func main() {
@@ -30,9 +31,6 @@ func main() {
 
   // Login page
   r.GET("/login", uc.Login)
-
-  // Logout session
-  // r.DELETE("/logout", Logout())
 
   // Get a user resource
   r.GET("/user/:id", uc.GetUser)
