@@ -124,7 +124,10 @@ func (uc UserController) GetUser(w http.ResponseWriter, r *http.Request, p httpr
   uj, _ := json.Marshal(u)
 
   // Get the URLs created by this user and use marshals for JSON structure
-  urls := uc.session.DB("cmpe272").C("UrlMap").Find(bson.M{"userId": p.ByName("id")})
+  err := uc.session.DB("cmpe272").C("UrlMap").Find(bson.M{"userId": oid})
+  if err != nil {
+   fmt.Fprintf(w, "%s", "Find Fail")
+  }
 
   // Write content-type, status code, payload
   w.Header().Set("Content-Type", "application/json")
