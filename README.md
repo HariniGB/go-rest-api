@@ -1,4 +1,4 @@
-# go-rest-api-mgo
+# Login Provider
 ## Jenkins Build Status   ![Success](https://raw.github.com/gigablah/jenkins-status/master/images/success.png)
 -------------------------
 
@@ -35,6 +35,7 @@ $ bin/folder_path
 ```
 or
 ```bash
+$ go build
 $ go run (file-name).go
 ```
 
