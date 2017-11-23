@@ -4,24 +4,37 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
+	"time"
 
+	"github.com/HariniGB/login-provider/common"
 	"github.com/HariniGB/login-provider/ldap"
-	"github.com/HariniGB/login-provider/models"
+	"github.com/HariniGB/login-provider/storage"
 	"github.com/julienschmidt/httprouter"
+	"github.com/sony/sonyflake"
+)
+
+const (
+	s3url = "s3url"
 )
 
 type UserController struct {
 	lp *ldap.Ldap
+	st storage.Storage
+	fl *sonyflake.Sonyflake
+	to time.Duration
 }
 
 // NewUserController provides a reference to a UserController with provided mongo session
-func NewUserController(username, password, host string, port int, dn string) *UserController {
+func NewUserController(username, password, host string,
+	port int, dn string, st storage.Storage, timeout time.Duration) *UserController {
 	lp, err := ldap.NewLdap(username, password, host, port, dn)
 	if err != nil {
 		return nil
 	}
-	return &UserController{lp}
+	fl := sonyflake.NewSonyflake(sonyflake.Settings{StartTime: time.Now()})
+	return &UserController{lp: lp, st: st, fl: fl, to: timeout}
 }
 
 // Sign up retrieves the signup form for new users
@@ -31,6 +44,91 @@ func (uc UserController) Signup(w http.ResponseWriter, r *http.Request, p httpro
 		panic(err)
 	}
 	tmpl.Execute(w, "Signup page")
+}
+
+func (uc UserController) AuthGet(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	info := uc.getUserInfoFromCookie(r)
+	if info != nil {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, "Login successful")
+		return
+	}
+
+	w.WriteHeader(http.StatusUnauthorized)
+	fmt.Fprintf(w, "Forbidden")
+	return
+}
+
+// Login retrieves the login form for the users
+func (uc UserController) Auth(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	info := uc.getUserInfoFromCookie(r)
+	if info != nil {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, "Login successful")
+		return
+	}
+
+	u := common.User{}
+	if r.Header.Get("Content-Type") == "application/json" {
+		json.NewDecoder(r.Body).Decode(&u)
+	} else {
+		u.Username = r.FormValue("id")
+		u.Password = r.FormValue("password")
+	}
+
+	err := u.ValidateLogin()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "%v", err)
+	}
+
+	if uc.lp.ExistsUser(u.Username) == false {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "User %s doesn't exist", u.Username)
+		return
+	}
+
+	if uc.lp.Validate(u.Username, u.Password) == false {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "Invalid password for username %s", u.Username)
+		return
+	}
+
+	info = &common.UserInfo{
+		Id: u.Username,
+	}
+	if groups, ok := uc.lp.GetUsersGroups(u.Username); ok {
+		info.Groups = groups
+	}
+
+	uid, err := uc.fl.NextID()
+	if err != nil {
+		log.Println("Unable to generate ID due to error: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Unable to authenticate user %s. Please try again", u.Username)
+		return
+	}
+
+	id := fmt.Sprintf("%d", uid)
+	err = uc.st.Insert(id, info)
+	if err != nil {
+		log.Println("Unable to persist user info due to error: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Unable to authenticate user %s. Please try again", u.Username)
+		return
+
+	}
+	cookie := &http.Cookie{
+		Name:     s3url,
+		HttpOnly: true,
+		Secure:   false,
+		Value:    id,
+		Expires:  time.Now().Add(uc.to),
+	}
+
+	http.SetCookie(w, cookie)
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "Login successful")
 }
 
 // Login retrieves the login form for the users
@@ -44,15 +142,21 @@ func (uc UserController) Login(w http.ResponseWriter, r *http.Request, p httprou
 
 // CreateUser creates a new user resource
 func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	u := models.User{}
+	u := common.User{}
 	if r.Header.Get("Content-Type") == "application/json" {
 		json.NewDecoder(r.Body).Decode(&u)
 	} else {
-		u.Username = r.FormValue("name")
+		u.Username = r.FormValue("id")
 		u.Email = r.FormValue("email")
 		u.FirstName = r.FormValue("first_name")
 		u.LastName = r.FormValue("last_name")
 		u.Password = r.FormValue("password")
+	}
+
+	err := u.ValidateSignup()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "%v", err)
 	}
 
 	if uc.lp.ExistsUser(u.Username) == true {
@@ -61,7 +165,7 @@ func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p ht
 		return
 	}
 
-	err := uc.lp.AddUser(&u)
+	err = uc.lp.AddUser(&u)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Unable to create user %s. Please try again", u.Username)
@@ -73,15 +177,21 @@ func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p ht
 
 // UpdateUser updates the user resource
 func (uc UserController) UpdateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	u := models.User{}
+	u := common.User{}
 	if r.Header.Get("Content-Type") == "application/json" {
 		json.NewDecoder(r.Body).Decode(&u)
 	} else {
-		u.Username = r.FormValue("name")
+		u.Username = r.FormValue("id")
 		u.Email = r.FormValue("email")
 		u.FirstName = r.FormValue("first_name")
 		u.LastName = r.FormValue("last_name")
 		u.Password = r.FormValue("password")
+	}
+
+	err := u.ValidateSignup()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "%v", err)
 	}
 
 	if uc.lp.ExistsUser(u.Username) == false {
@@ -90,7 +200,13 @@ func (uc UserController) UpdateUser(w http.ResponseWriter, r *http.Request, p ht
 		return
 	}
 
-	err := uc.lp.UpdateUser(&u)
+	err = uc.lp.UpdateUser(&u)
+	if err == ldap.UserAuthFailure {
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Fprintf(w, "Invalid password for username %s", u.Username)
+		return
+	}
+
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "Unable to update user %s. Please try again", u.Username)
@@ -118,4 +234,18 @@ func (uc UserController) RemoveUser(w http.ResponseWriter, r *http.Request, p ht
 	}
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, "User %s updated", id)
+}
+
+func (uc UserController) getUserInfoFromCookie(r *http.Request) *common.UserInfo {
+	c, err := r.Cookie(s3url)
+
+	// Check if cookie is present or not
+	if err == nil {
+		id := c.Value
+		// If there is a valid entry in meta store then mark as success
+		info, _ := uc.st.Get(id)
+		return info
+	}
+
+	return nil
 }

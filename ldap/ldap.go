@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/HariniGB/login-provider/models"
+	"github.com/HariniGB/login-provider/common"
 	"gopkg.in/ldap.v2"
 )
 
@@ -69,7 +69,7 @@ func (l *Ldap) ExistsUser(name string) bool {
 	return true
 }
 
-func (l *Ldap) AddUser(user *models.User) error {
+func (l *Ldap) AddUser(user *common.User) error {
 	conn, err := l.loginAdmin(l.username, l.password)
 	if err != nil {
 		return err
@@ -225,7 +225,7 @@ func (l *Ldap) ChangeUserPassword(username, oldPassword, newPassword string) err
 	return err
 }
 
-func (l *Ldap) UpdateUser(user *models.User) error {
+func (l *Ldap) UpdateUser(user *common.User) error {
 	if l.Validate(user.Username, user.Password) == false {
 		return UserAuthFailure
 	}
