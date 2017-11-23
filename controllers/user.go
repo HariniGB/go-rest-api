@@ -6,44 +6,22 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/HariniGB/login-provider/ldap"
 	"github.com/HariniGB/login-provider/models"
 	"github.com/julienschmidt/httprouter"
-	"golang.org/x/crypto/bcrypt"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
-type (
-	// UserController represents the controller for operating on the User resource
-	UserController struct {
-		session *mgo.Session
-	}
-)
+type UserController struct {
+	lp *ldap.Ldap
+}
 
 // NewUserController provides a reference to a UserController with provided mongo session
-func NewUserController(s *mgo.Session) *UserController {
-	return &UserController{s}
-}
-
-//Method to get hash password for user password and show how to hash passwords using bcrypt
-func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	return string(bytes), err
-}
-
-//  Method to check the hashed password and user given password while login
-func CheckPasswordHash(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	return err == nil
-}
-
-// Home retrieves the home page
-func (uc UserController) Home(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	tmpl, err := template.ParseFiles("templates/home.html")
+func NewUserController(username, password, host string, port int, dn string) *UserController {
+	lp, err := ldap.NewLdap(username, password, host, port, dn)
 	if err != nil {
-		panic(err)
+		return nil
 	}
-	tmpl.Execute(w, "Home page")
+	return &UserController{lp}
 }
 
 // Sign up retrieves the signup form for new users
@@ -66,160 +44,78 @@ func (uc UserController) Login(w http.ResponseWriter, r *http.Request, p httprou
 
 // CreateUser creates a new user resource
 func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// Stub an user to be populated from the body
 	u := models.User{}
-	r.ParseForm()
+	if r.Header.Get("Content-Type") == "application/json" {
+		json.NewDecoder(r.Body).Decode(&u)
+	} else {
+		u.Username = r.FormValue("name")
+		u.Email = r.FormValue("email")
+		u.FirstName = r.FormValue("first_name")
+		u.LastName = r.FormValue("last_name")
+		u.Password = r.FormValue("password")
+	}
 
-	// Populate the user data
-	json.NewDecoder(r.Body).Decode(&u)
-
-	// Add an Id
-	u.Id = bson.NewObjectId()
-	u.Name = r.FormValue("name")
-	u.Email = r.FormValue("email")
-	password, _ := HashPassword(r.FormValue("password"))
-	u.Password = password
-
-	// Testing Bcrypt
-	// fmt.Println("Password:", r.FormValue("password"))
-	// fmt.Println("Hash:    ", u.Password)
-	// match := CheckPasswordHash(r.FormValue("password"), u.Password)
-	// fmt.Println("Match:   ", match)
-
-	// Write the user to mongo
-	uc.session.DB("cmpe272").C("UrlMap").Insert(u)
-	fmt.Printf("\ncreated", u)
-	// Marshal provided interface into JSON structure
-	uj, _ := json.Marshal(u)
-
-	// Write content-type, status code, payload
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(201)
-	fmt.Fprintf(w, "%s", uj)
-
-}
-
-// GetUsers retrieves all the user's resources
-func (uc UserController) GetUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// Grab id
-	id := p.ByName("id")
-
-	// Verify id is ObjectId, otherwise bail
-	if !bson.IsObjectIdHex(id) {
-		w.WriteHeader(404)
+	if uc.lp.ExistsUser(u.Username) == true {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "User %s already exists", u.Username)
 		return
 	}
 
-	// Grab id
-	oid := bson.ObjectIdHex(id)
-
-	// Stub user
-	u := models.User{}
-
-	// Fetch user
-	if err := uc.session.DB("cmpe272").C("UrlMap").FindId(oid).One(&u); err != nil {
-		w.WriteHeader(404)
+	err := uc.lp.AddUser(&u)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Unable to create user %s. Please try again", u.Username)
 		return
 	}
-
-	// Marshal provided interface into JSON structure
-	uj, _ := json.Marshal(u)
-
-	url := models.Url{}
-	// Get the URLs created by this user and use marshals for JSON structure
-	if err := uc.session.DB("cmpe272").C("UrlMap").Find(bson.M{"userId": id}).One(&url); err != nil {
-		w.WriteHeader(404)
-		return
-	}
-
-	url_list, _ := json.Marshal(url)
-
-	// Write content-type, status code, payload
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	fmt.Fprintf(w, "%s", uj)
-	fmt.Fprintf(w, "%s", url_list)
+	w.WriteHeader(http.StatusCreated)
+	fmt.Fprintf(w, "User %s created", u.Username)
 }
 
 // UpdateUser updates the user resource
 func (uc UserController) UpdateUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// Grab id
-	id := p.ByName("id")
-
-	// Verify id is ObjectId, otherwise bail
-	if !bson.IsObjectIdHex(id) {
-		w.WriteHeader(404)
-		return
-	}
-
-	// Grab id
-	oid := bson.ObjectIdHex(id)
-
-	// Stub user
 	u := models.User{}
+	if r.Header.Get("Content-Type") == "application/json" {
+		json.NewDecoder(r.Body).Decode(&u)
+	} else {
+		u.Username = r.FormValue("name")
+		u.Email = r.FormValue("email")
+		u.FirstName = r.FormValue("first_name")
+		u.LastName = r.FormValue("last_name")
+		u.Password = r.FormValue("password")
+	}
 
-	// Fetch user
-	if err := uc.session.DB("cmpe272").C("UrlMap").FindId(oid).One(&u); err != nil {
-		w.WriteHeader(404)
+	if uc.lp.ExistsUser(u.Username) == false {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "User %s doesn't exist", u.Username)
 		return
 	}
 
-	// Populate the user data
-	json.NewDecoder(r.Body).Decode(&u)
-
-	//Update the user to mongo
-	uc.session.DB("cmpe272").C("UrlMap").Update(oid, u)
-
-	// Marshal provided interface into JSON structure
-	uj, _ := json.Marshal(u)
-
-	// Write content-type, status code, payload
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(201)
-	fmt.Fprintf(w, "%s", uj)
+	err := uc.lp.UpdateUser(&u)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Unable to update user %s. Please try again", u.Username)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "User %s updated", u.Username)
 }
 
 // RemoveUser removes an existing user resource
 func (uc UserController) RemoveUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// Grab id
 	id := p.ByName("id")
 
-	// Verify id is ObjectId, otherwise bail
-	if !bson.IsObjectIdHex(id) {
-		w.WriteHeader(404)
+	if uc.lp.ExistsUser(id) == false {
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintf(w, "User %s doesn't exist", id)
 		return
 	}
 
-	// Grab id
-	oid := bson.ObjectIdHex(id)
-
-	// Remove user
-	if err := uc.session.DB("cmpe272").C("UrlMap").RemoveId(oid); err != nil {
-		w.WriteHeader(404)
+	err := uc.lp.DeleteUser(id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(w, "Unable to delete user %s. Please try again", id)
 		return
 	}
-
-	// Write status
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "User %s updated", id)
 }
-
-// GetUser retrieves an individual user resource
-// func (uc UserController) GetUsers(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-
-//   // Stub user
-//   u := models.User{}
-
-//   // Fetch user
-//   if err := uc.session.DB("cmpe272").C("UrlMap"); err != nil {
-//     w.WriteHeader(404)
-//     return
-//   }
-
-//   // Marshal provided interface into JSON structure
-//   uj, _ := json.Marshal(u)
-
-//   // Write content-type, status code, payload
-//   w.Header().Set("Content-Type", "application/json")
-//   w.WriteHeader(200)
-//   fmt.Fprintf(w, "%s", uj)
-// }
