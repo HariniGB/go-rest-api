@@ -1,38 +1,33 @@
 package main
 
-// See this IMPORTANT LINK FOR REFERENCE:  https://stevenwhite.com/tag/golang/
-
 import (
-	// Standard library packages
 	"net/http"
-	// Connecting to the controller in same folder
+	"os"
+	"strconv"
+
 	"github.com/HariniGB/login-provider/controllers"
-	// Third party packages
 	"github.com/julienschmidt/httprouter"
-	"gopkg.in/mgo.v2"
 )
 
 func main() {
 	// Instantiate a new router
 	r := httprouter.New()
 
+	username := os.Getenv("ROOT_USER")
+	password := os.Getenv("ROOT_PASSWORD")
+	host := os.Getenv("LDAP_HOST")
+	portStr := os.Getenv("LDAP_PORT")
+	port, _ := strconv.ParseInt(portStr, 10, 64)
+	dn := os.Getenv("LDAP_DN")
+
 	// Get a UserController instance
-	uc := controllers.NewUserController(getSession())
-
-	// Get all users resources
-	// r.GET("/users", uc.GetUsers)
-
-	// Home page
-	r.GET("/", uc.Home)
+	uc := controllers.NewUserController(username, password, host, int(port), dn)
 
 	// sign up page
 	r.GET("/signup", uc.Signup)
 
 	// Login page
 	r.GET("/login", uc.Login)
-
-	// Get a user resource
-	r.GET("/api/v1/user/:id", uc.GetUser)
 
 	// Create a new user
 	r.POST("/api/v1/user", uc.CreateUser)
@@ -45,18 +40,4 @@ func main() {
 
 	// Fire up the server
 	http.ListenAndServe("localhost:3000", r)
-}
-
-// getSession creates a new mongo session and panics if connection error occurs
-func getSession() *mgo.Session {
-	// Connect to our local mongo
-	s, err := mgo.Dial("mongodb://localhost:27017")
-
-	// Check if connection error, is mongo running?
-	if err != nil {
-		panic(err)
-	}
-
-	// Deliver session
-	return s
 }
