@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/HariniGB/login-provider/common"
@@ -47,8 +48,9 @@ func (uc UserController) Signup(w http.ResponseWriter, r *http.Request, p httpro
 }
 
 func (uc UserController) AuthGet(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	info := uc.getUserInfoFromCookie(r)
+	_, info := uc.getUserInfoFromCookie(r)
 	if info != nil {
+		uc.setHttpHeaders(w, info)
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, "Login successful")
 		return
@@ -61,11 +63,11 @@ func (uc UserController) AuthGet(w http.ResponseWriter, r *http.Request, p httpr
 
 // Login retrieves the login form for the users
 func (uc UserController) Auth(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	info := uc.getUserInfoFromCookie(r)
+	target := r.Header.Get("Referer")
+	id, info := uc.getUserInfoFromCookie(r)
 	if info != nil {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "Login successful")
-		return
+		// Delete old entry
+		uc.st.Delete(id)
 	}
 
 	u := common.User{}
@@ -109,7 +111,7 @@ func (uc UserController) Auth(w http.ResponseWriter, r *http.Request, p httprout
 		return
 	}
 
-	id := fmt.Sprintf("%d", uid)
+	id = fmt.Sprintf("%d", uid)
 	err = uc.st.Insert(id, info)
 	if err != nil {
 		log.Println("Unable to persist user info due to error: ", err)
@@ -126,9 +128,16 @@ func (uc UserController) Auth(w http.ResponseWriter, r *http.Request, p httprout
 		Expires:  time.Now().Add(uc.to),
 	}
 
+	uc.setHttpHeaders(w, info)
 	http.SetCookie(w, cookie)
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "Login successful")
+	fmt.Println(target)
+	if target != "" {
+		http.Redirect(w, r, target, http.StatusFound)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, "Login successful")
+	}
+
 }
 
 // Login retrieves the login form for the users
@@ -137,7 +146,7 @@ func (uc UserController) Login(w http.ResponseWriter, r *http.Request, p httprou
 	if err != nil {
 		panic(err)
 	}
-	tmpl.Execute(w, "Login page")
+	err = tmpl.Execute(w, r.Header.Get("Referer"))
 }
 
 // CreateUser creates a new user resource
@@ -236,7 +245,7 @@ func (uc UserController) RemoveUser(w http.ResponseWriter, r *http.Request, p ht
 	fmt.Fprintf(w, "User %s updated", id)
 }
 
-func (uc UserController) getUserInfoFromCookie(r *http.Request) *common.UserInfo {
+func (uc UserController) getUserInfoFromCookie(r *http.Request) (string, *common.UserInfo) {
 	c, err := r.Cookie(s3url)
 
 	// Check if cookie is present or not
@@ -244,8 +253,13 @@ func (uc UserController) getUserInfoFromCookie(r *http.Request) *common.UserInfo
 		id := c.Value
 		// If there is a valid entry in meta store then mark as success
 		info, _ := uc.st.Get(id)
-		return info
+		return id, info
 	}
 
-	return nil
+	return "", nil
+}
+
+func (uc UserController) setHttpHeaders(w http.ResponseWriter, u *common.UserInfo) {
+	w.Header().Set("X-Forwarded-User", u.Id)
+	w.Header().Set("X-Forwarded-Groups", strings.Join(u.Groups, "|"))
 }
