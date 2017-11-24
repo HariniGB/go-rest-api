@@ -50,9 +50,9 @@ func main() {
 
 	// Login page
 	r.GET("/login", uc.Login)
+	r.POST("/login", uc.Auth)
 
 	// Authenticate user
-	r.POST("/auth", uc.Auth)
 	r.GET("/auth", uc.AuthGet)
 
 	// Create a new user
@@ -65,5 +65,5 @@ func main() {
 	r.DELETE("/api/v1/user/:id", uc.RemoveUser)
 
 	// Fire up the server
-	http.ListenAndServe("localhost:3000", r)
+	http.ListenAndServe(":3000", r)
 }
