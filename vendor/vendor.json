@@ -1,0 +1,61 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "oTt1lj03wGUwciQBYCiXmc6TZ1s=",
+			"path": "github.com/bluele/gcache",
+			"revision": "e73ab21fcf77aff5ef6312a12d0060a0b2c53d21",
+			"revisionTime": "2017-09-29T05:48:30Z"
+		},
+		{
+			"checksumSHA1": "fvVoeETRxg13N2GlxydO+5slZdM=",
+			"path": "github.com/bradfitz/gomemcache/memcache",
+			"revision": "1952afaa557dc08e8e0d89eafab110fb501c1a2b",
+			"revisionTime": "2017-02-08T21:30:04Z"
+		},
+		{
+			"checksumSHA1": "5rPfda8jFccr3A6heL+JAmi9K9g=",
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d",
+			"revisionTime": "2015-11-05T21:09:06Z"
+		},
+		{
+			"checksumSHA1": "0aax/qOmVxrexQc7w9+P99GH7zs=",
+			"path": "github.com/julienschmidt/httprouter",
+			"revision": "21439ef4d70ba4f3e2a5ed9249e7b03af4019b40",
+			"revisionTime": "2016-01-06T08:35:25Z"
+		},
+		{
+			"checksumSHA1": "zKKp5SZ3d3ycKe4EKMNT0BqAWBw=",
+			"path": "github.com/pmezard/go-difflib/difflib",
+			"revision": "d8ed2627bdf02c080bf22230dbb337003b7aba2d",
+			"revisionTime": "2015-10-28T09:42:44Z"
+		},
+		{
+			"checksumSHA1": "ooEfaKEeZt34ebW5YibKTvFip8Y=",
+			"path": "github.com/sony/sonyflake",
+			"revision": "fa881fb1052b152e977c41023052c2f2a1c475e9",
+			"revisionTime": "2016-05-30T02:15:00Z"
+		},
+		{
+			"checksumSHA1": "5XAzjZrdlLh1mgd7xEvoK6LeLCA=",
+			"path": "github.com/stretchr/testify/assert",
+			"revision": "e3a8ff8ce36581f87a15341206f205b1da467059",
+			"revisionTime": "2015-12-08T00:24:04Z"
+		},
+		{
+			"checksumSHA1": "xsaHqy6/sonLV6xIxTNh4FfkWbU=",
+			"path": "gopkg.in/asn1-ber.v1",
+			"revision": "379148ca0225df7a432012b8df0355c2a2063ac0",
+			"revisionTime": "2017-05-11T16:59:59Z"
+		},
+		{
+			"checksumSHA1": "itYnRitfdzJjy2mZlvJ+hCJZvtY=",
+			"path": "gopkg.in/ldap.v2",
+			"revision": "8168ee085ee43257585e50c6441aadf54ecb2c9f",
+			"revisionTime": "2016-12-01T20:47:33Z"
+		}
+	],
+	"rootPath": "github.com/HariniGB/login-provider"
+}
