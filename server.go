@@ -48,7 +48,6 @@ func main() {
 	// Get a UserController instance
 	uc := controllers.NewUserController(username, password, host, int(port), dn, firstuser, firstpassword, st, timeout)
 
-	fmt.Println(uc)
 	// sign up page
 	r.GET("/signup", uc.Signup)
 
@@ -67,7 +66,7 @@ func main() {
 
 	// Remove an existing user
 	r.DELETE("/api/v1/user/:id", uc.RemoveUser)
-
+	fmt.Println(uc, r)
 	// Fire up the server
 	http.ListenAndServe(":3000", r)
 }
