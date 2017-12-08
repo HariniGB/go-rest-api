@@ -48,6 +48,7 @@ func main() {
 	// Get a UserController instance
 	uc := controllers.NewUserController(username, password, host, int(port), dn, firstuser, firstpassword, st, timeout)
 
+	fmt.Println(uc, r)
 	// sign up page
 	r.GET("/signup", uc.Signup)
 
