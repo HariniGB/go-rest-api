@@ -12,6 +12,7 @@ import (
 	"github.com/HariniGB/login-provider/storage/memcache"
 	"github.com/HariniGB/login-provider/storage/memory"
 	"github.com/julienschmidt/httprouter"
+	"fmt"
 )
 
 func main() {
@@ -47,6 +48,7 @@ func main() {
 	// Get a UserController instance
 	uc := controllers.NewUserController(username, password, host, int(port), dn, firstuser, firstpassword, st, timeout)
 
+	fmt.Println(uc)
 	// sign up page
 	r.GET("/signup", uc.Signup)
 
