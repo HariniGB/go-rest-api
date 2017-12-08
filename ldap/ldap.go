@@ -15,15 +15,19 @@ type Ldap struct {
 	host     string
 	port     int
 	dn       string
+	firstuser string
+	firstpassword string
 }
 
-func NewLdap(username, password, host string, port int, dn string) (*Ldap, error) {
+func NewLdap(username, password, host string, port int, dn, firstuser, firstpassword string) (*Ldap, error) {
 	l := &Ldap{
 		username: username,
 		password: password,
 		host:     host,
 		port:     port,
 		dn:       dn,
+		firstuser: firstuser,
+		firstpassword: firstpassword,
 	}
 
 	if err := l.Test(); err != nil {
@@ -32,6 +36,18 @@ func NewLdap(username, password, host string, port int, dn string) (*Ldap, error
 
 	l.createTLD("groups")
 	l.createTLD("people")
+
+	l.AddUser(&common.User{
+		Username: firstuser,
+		Password: firstpassword,
+		Email: fmt.Sprintf("%s@localhost"),
+		FirstName: firstuser,
+		LastName: firstuser,
+	})
+
+
+	l.AddGroup(Users)
+	l.AddGroup(Admins)
 
 	return l, nil
 }
@@ -92,6 +108,24 @@ func (l *Ldap) AddUser(user *common.User) error {
 	return err
 }
 
+func (l *Ldap) AddUserToGroup(group, user string) error {
+	conn, err := l.loginAdmin(l.username, l.password)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	dn := fmt.Sprintf("cn=%s,ou=groups,%s", group, l.dn)
+	req := ldap.NewModifyRequest(dn)
+	req.Add("member", []string{fmt.Sprintf("cn=%s,ou=people,%s", user, l.dn)})
+
+	err = conn.Modify(req)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (l *Ldap) DeleteUser(name string) error {
 	conn, err := l.loginAdmin(l.username, l.password)
 	if err != nil {
@@ -109,7 +143,7 @@ func (l *Ldap) DeleteUser(name string) error {
 	return err
 }
 
-func (l *Ldap) AddGroup(name, user string) error {
+func (l *Ldap) AddGroup(name string) error {
 	conn, err := l.loginAdmin(l.username, l.password)
 	if err != nil {
 		return err
@@ -120,7 +154,7 @@ func (l *Ldap) AddGroup(name, user string) error {
 	req := ldap.NewAddRequest(dn)
 	req.Attribute("description", []string{fmt.Sprintf("%s group", name)})
 	req.Attribute("objectclass", []string{"groupofnames"})
-	req.Attribute("member", []string{fmt.Sprintf("cn=%s,ou=people,%s", user, l.dn)})
+	req.Attribute("member", []string{fmt.Sprintf("cn=%s,ou=people,%s", l.firstuser, l.dn)})
 	err = conn.Add(req)
 
 	if ldap.IsErrorWithCode(err, 68) {
@@ -269,6 +303,7 @@ func (l *Ldap) login(cn, password string) (*ldap.Conn, error) {
 	}
 	err = conn.Bind(cn, password)
 	if err != nil {
+		log.Println(err)
 		conn.Close()
 		return nil, UserAuthFailure
 	}

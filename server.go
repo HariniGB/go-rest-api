@@ -24,6 +24,8 @@ func main() {
 	portStr := os.Getenv("LDAP_PORT")
 	port, _ := strconv.ParseInt(portStr, 10, 64)
 	dn := os.Getenv("LDAP_DN")
+	firstuser := os.Getenv("FIRST_USER")
+	firstpassword := os.Getenv("FIRST_PASSWORD")
 
 	timeoutStr := os.Getenv("SESSION_EXPIRY")
 	timeout, err := time.ParseDuration(timeoutStr)
@@ -43,7 +45,7 @@ func main() {
 	}
 
 	// Get a UserController instance
-	uc := controllers.NewUserController(username, password, host, int(port), dn, st, timeout)
+	uc := controllers.NewUserController(username, password, host, int(port), dn, firstuser, firstpassword, st, timeout)
 
 	// sign up page
 	r.GET("/signup", uc.Signup)
