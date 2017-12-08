@@ -5,14 +5,6 @@ clientsNode{
   def envStage = utils.environmentNamespace('staging')
   def envProd = utils.environmentNamespace('production')
   def newVersion = ''
-
-  // Install the desired Go version
-  def root = tool name: 'Go1.8', type: 'go'
- 
-  // Export environment variables pointing to the directory where Go was installed
-  withEnv(["GOROOT=${root}", "PATH+GO=${root}/bin"]) {
-    sh 'go version'
-  }
   
   git 'http://gogs/esp/login-provider.git'
 
@@ -25,14 +17,12 @@ clientsNode{
   newVersion = performCanaryRelease {}
   
   def rc = getKubernetesJson {
-    port = 8080
+    port = 3000
     label = 'golang'
     icon = 'https://cdn.rawgit.com/fabric8io/fabric8/dc05040/website/src/images/logos/gopher.png'
     version = newVersion
     imageName = clusterImageName
   }
-  stage 'Testing'
-  sh 'ls -lart' 
 
   stage 'Rollout Staging'
   kubernetesApply(file: rc, environment: envStage)
