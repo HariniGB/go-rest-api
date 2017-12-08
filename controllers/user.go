@@ -29,8 +29,8 @@ type UserController struct {
 
 // NewUserController provides a reference to a UserController with provided mongo session
 func NewUserController(username, password, host string,
-	port int, dn string, st storage.Storage, timeout time.Duration) *UserController {
-	lp, err := ldap.NewLdap(username, password, host, port, dn)
+	port int, dn, firstuser, firstpassword string, st storage.Storage, timeout time.Duration) *UserController {
+	lp, err := ldap.NewLdap(username, password, host, port, dn, firstuser, firstpassword)
 	if err != nil {
 		return nil
 	}
@@ -180,6 +180,8 @@ func (uc UserController) CreateUser(w http.ResponseWriter, r *http.Request, p ht
 		fmt.Fprintf(w, "Unable to create user %s. Please try again", u.Username)
 		return
 	}
+
+	err = uc.lp.AddGroup(ldap.Users)
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "User %s created", u.Username)
 }
