@@ -32,6 +32,7 @@ func NewUserController(username, password, host string,
 	port int, dn, firstuser, firstpassword string, st storage.Storage, timeout time.Duration) *UserController {
 	lp, err := ldap.NewLdap(username, password, host, port, dn, firstuser, firstpassword)
 	if err != nil {
+		log.Panic(err)
 		return nil
 	}
 	fl := sonyflake.NewSonyflake(sonyflake.Settings{StartTime: time.Now()})
